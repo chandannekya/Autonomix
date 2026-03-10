@@ -20,51 +20,45 @@ export async function runAgent(
   agentId: string,
   task: string,
   history: { role: string; content: string }[] = [],
+  emit: (event: object) => void,
 ) {
-  // 1️⃣ Fetch agent config
   const agent = await prisma.agentConfig.findUnique({
     where: { id: agentId },
   });
 
   if (!agent) {
+    emit({ type: "error", message: "Agent not found" });
     return "Agent configuration not found";
   }
 
-  // 2️⃣ System Prompt
   const systemPrompt = `
 You are an autonomous AI agent named ${agent.name}.
 Your role: ${agent.role}
 
 You must respond ONLY in valid JSON.
 
-You can use these tools:
-${agent.tools.join(", ")}
+You can use these tools: ${agent.tools.join(", ")}
 
-If you need to use a tool, respond like this:
+To use a tool:
+{ "action": "tool", "reason": "why you need this tool", "tool": "tool_name", "input": "input here" }
 
-{
-  "action": "tool",
-  "reason": "I need GDP values to compute difference",
-  "tool": "web_search",
-  "input": "GDP of Japan and Germany"
-}
-
-If the task is complete, respond like this:
-
-{
-  "action": "final",
-  "answer": "final answer here"
-}
+When done:
+{ "action": "final", "answer": "complete answer here" }
 `;
 
-  let memoryContext = "";
+  emit({ type: "thinking", message: "Retrieving relevant memories..." });
 
+  let memoryContext = "";
   if (agent.memoryEnabled) {
     memoryContext = await queryMemory(agent.id, task);
   }
-  console.log("MEMORY CONTEXT:", memoryContext);
 
-  // ✅ Build history text from previous messages
+  emit({
+    type: "memory",
+    hasMemory: memoryContext.length > 0,
+    count: memoryContext.length > 0 ? 1 : 0,
+  });
+
   const historyText =
     history.length > 0
       ? history
@@ -72,7 +66,6 @@ If the task is complete, respond like this:
           .join("\n")
       : "No previous messages";
 
-  // ✅ Context now includes full conversation history
   let context = `
 Conversation history:
 ${historyText}
@@ -80,21 +73,23 @@ ${historyText}
 Current message: ${task}
 
 Relevant past memory:
-${memoryContext}
+${memoryContext || "None"}
 `;
 
   let iteration = 0;
 
-  // 3️⃣ Autonomous Loop
   while (iteration < 5) {
+    emit({
+      type: "thinking",
+      message: `Reasoning... (iteration ${iteration + 1})`,
+    });
+
     const llmResponse = await model.invoke([
       { role: "system", content: systemPrompt },
       { role: "user", content: context },
     ]);
 
-    // SAFELY extract content
     let rawContent = "";
-
     if (typeof llmResponse.content === "string") {
       rawContent = llmResponse.content;
     } else if (Array.isArray(llmResponse.content)) {
@@ -106,61 +101,65 @@ ${memoryContext}
     }
 
     rawContent = rawContent.replace(/```json|```/g, "").trim();
-
     console.log("RAW LLM OUTPUT:", rawContent);
 
     let response: any;
-
     try {
       response = JSON.parse(rawContent);
-    } catch (error) {
+    } catch {
+      emit({ type: "error", message: "LLM returned invalid JSON" });
       return "Invalid JSON response from LLM";
     }
 
-    // 4️⃣ If tool action
     if (response.action === "tool") {
       const toolName = response.tool;
 
+      // ✅ Validate before emitting
       if (!agent.tools.includes(toolName)) {
+        emit({ type: "error", message: `Tool "${toolName}" not allowed` });
         return `Tool "${toolName}" not allowed for this agent`;
       }
 
       const toolFunc = tools[toolName as keyof typeof tools];
-
       if (!toolFunc) {
+        emit({ type: "error", message: `Tool "${toolName}" not implemented` });
         return `Tool "${toolName}" not implemented`;
       }
 
-      const toolResult = await toolFunc(response.input);
+      emit({
+        type: "tool_selected",
+        tool: toolName,
+        input: response.input,
+        reason: response.reason,
+      });
 
-      console.log("TOOL RESULT:", toolResult);
+      // ✅ Timer starts before execution
+      const start = Date.now();
+      const toolResult = await toolFunc(response.input);
+      const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+
+      emit({
+        type: "tool_result",
+        tool: toolName,
+        result: toolResult.slice(0, 200),
+        time: `${elapsed}s`,
+      });
 
       if (agent.memoryEnabled) {
         await storeMemory(
           agent.id,
-          `Tool Used: ${toolName}\nInput: ${response.input}\nResult: ${toolResult}`,
+          `Tool: ${toolName}\nInput: ${response.input}\nResult: ${toolResult}`,
         );
       }
 
-      // Append tool result to context
-      context += `
-
-Tool "${toolName}" result:
-${toolResult}
-
-Based on this result:
-- If enough info, return final.
-- Otherwise call another tool.
-`;
+      context += `\nTool "${toolName}" result:\n${toolResult}\n\nContinue reasoning or return final answer.`;
     }
 
     if (response.action === "final") {
+      emit({ type: "final", answer: response.answer });
+
       if (agent.memoryEnabled) {
-        // ✅ Store full conversation turn in memory
-        await storeMemory(
-          agent.id,
-          `User: ${task}\nAssistant: ${response.answer}`,
-        );
+        await storeMemory(agent.id, `User: ${task}\nAgent: ${response.answer}`);
       }
 
       return response.answer;
@@ -169,5 +168,6 @@ Based on this result:
     iteration++;
   }
 
+  emit({ type: "error", message: "Maximum iterations reached" });
   return "Maximum iterations reached";
 }
