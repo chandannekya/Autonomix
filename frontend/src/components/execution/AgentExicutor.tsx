@@ -15,16 +15,9 @@ import {
 } from "lucide-react";
 import { useAgentStore } from "@/store/useAgentStore";
 import ReactMarkdown from "react-markdown";
+import { streamAgentRun, SSEStep } from "@/services/agentApis";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type SSEStep =
-  | { type: "thinking"; message: string }
-  | { type: "memory"; hasMemory: boolean; count: number }
-  | { type: "tool_selected"; tool: string; input: string; reason?: string }
-  | { type: "tool_result"; tool: string; result: string; time: string }
-  | { type: "final"; answer: string }
-  | { type: "error"; message: string };
 
 type LogEntry =
   | { kind: "system"; text: string }
@@ -215,84 +208,58 @@ const AgentExecutor: React.FC = () => {
     setTask("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
 
-    // Add directive log
     setLogs((prev) => [
       ...prev,
-      {
-        kind: "directive",
-        text: currentTask,
-        timestamp,
-      },
+      { kind: "directive", text: currentTask, timestamp },
     ]);
 
-    // ── SSE Connection ────────────────────────────────────────────────────────
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const eventSource = streamAgentRun(
+      { id: activeAgent.id, task: currentTask, history: updatedHistory },
 
-    const params = new URLSearchParams({
-      id: activeAgent.id,
-      task: currentTask,
-      history: JSON.stringify(updatedHistory),
-    });
+      // onStep
+      (step) => {
+        if (step.type === "final") {
+          const ts = new Date().toLocaleTimeString([], { hour12: false });
+          setLogs((prev) => [
+            ...prev,
+            { kind: "step", step }, // ✅ ANSWER_READY row
+            { kind: "response", text: step.answer, timestamp: ts }, // ✅ actual answer
+          ]);
+          setHistory((prev) => [
+            ...prev,
+            { role: "assistant", content: step.answer },
+          ]);
+          return; // don't fall through to generic step push
+        }
 
-    const eventSource = new EventSource(
-      `${API_URL}/api/agent/run/stream?${params}`,
+        if (step.type === "error") {
+          const ts = new Date().toLocaleTimeString([], { hour12: false });
+          setLogs((prev) => [
+            ...prev,
+            { kind: "error", text: step.message, timestamp: ts },
+          ]);
+          return;
+        }
+
+        // thinking / memory / tool_selected / tool_result
+        setLogs((prev) => [...prev, { kind: "step", step }]);
+      },
+
+      // onDone
+      () => setIsRunning(false),
+
+      // onError
+      (msg) => {
+        const ts = new Date().toLocaleTimeString([], { hour12: false });
+        setLogs((prev) => [
+          ...prev,
+          { kind: "error", text: msg, timestamp: ts },
+        ]);
+      },
     );
+
     eventSourceRef.current = eventSource;
-
-    eventSource.onmessage = (e) => {
-      const step: SSEStep = JSON.parse(e.data);
-
-      // Final answer — add response log and close
-      if (step.type === "final") {
-        const ts = new Date().toLocaleTimeString([], { hour12: false });
-
-        setLogs((prev) => [
-          ...prev,
-          { kind: "step", step }, // "ANSWER_READY" step row
-          { kind: "response", text: step.answer, timestamp: ts }, // actual answer
-        ]);
-
-        setHistory((prev) => [
-          ...prev,
-          { role: "assistant", content: step.answer },
-        ]);
-
-        setIsRunning(false);
-        eventSource.close();
-        return;
-      }
-
-      // Error
-      if (step.type === "error") {
-        const ts = new Date().toLocaleTimeString([], { hour12: false });
-        setLogs((prev) => [
-          ...prev,
-          { kind: "error", text: step.message, timestamp: ts },
-        ]);
-        setIsRunning(false);
-        eventSource.close();
-        return;
-      }
-
-      // All other steps — thinking, memory, tool_selected, tool_result
-      setLogs((prev) => [...prev, { kind: "step", step }]);
-    };
-
-    eventSource.onerror = () => {
-      const ts = new Date().toLocaleTimeString([], { hour12: false });
-      setLogs((prev) => [
-        ...prev,
-        {
-          kind: "error",
-          text: "SSE_CONNECTION_LOST — stream terminated unexpectedly",
-          timestamp: ts,
-        },
-      ]);
-      setIsRunning(false);
-      eventSource.close();
-    };
   };
-
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (

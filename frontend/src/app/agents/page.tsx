@@ -15,6 +15,7 @@ type AgentData = {
 
 const Page = () => {
   const { data: agents = [], isLoading, error, refetch } = useAllAgents();
+  console.log(process.env.NEXT_PUBLIC_BASE_URL, agents, "base url");
 
   return (
     <section className="bg-bg-primary min-h-screen antialiased">
@@ -118,7 +119,7 @@ const Page = () => {
         {/* Agents grid */}
         {!isLoading && !error && agents.length > 0 && (
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {agents.map((agent: AgentData, i: number) => (
+            {agents?.map((agent: AgentData, i: number) => (
               <div
                 key={agent.id}
                 className="anim"
