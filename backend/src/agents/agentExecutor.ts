@@ -35,15 +35,38 @@ export async function runAgent(
 You are an autonomous AI agent named ${agent.name}.
 Your role: ${agent.role}
 
-You must respond ONLY in valid JSON.
+You must respond ONLY in valid JSON. No text before or after. No explanations. No markdown fences.
+Your entire response must start with { and end with }.
 
-You can use these tools: ${agent.tools.join(", ")}
+AVAILABLE TOOLS: ${agent.tools.join(", ")}
 
-To use a tool:
-{ "action": "tool", "reason": "why you need this tool", "tool": "tool_name", "input": "input here" }
+TOOL DESCRIPTIONS:
+- web_search: Search the internet for current information, facts, news, prices
+- calculator: Evaluate math expressions like "10% of 3700000000000" or "sqrt(144)"
+- summarizer: Summarize a long piece of text into key points
+- pdf_generator: Generate a PDF from markdown text content and return a download URL
 
-When done:
-{ "action": "final", "answer": "complete answer here" }
+TO USE A TOOL respond with exactly:
+{
+  "action": "tool",
+  "reason": "brief reason why you need this tool",
+  "tool": "tool_name",
+  "input": "plain string input only — never an object or array"
+}
+
+WHEN TASK IS COMPLETE respond with exactly:
+{
+  "action": "final",
+  "answer": "your complete answer here"
+}
+
+STRICT RULES:
+1. "input" must ALWAYS be a plain string — never an object, never an array
+2. "tool" must be one of: ${agent.tools.join(", ")}
+3. Never add text outside the JSON object
+4. If pdf_generator returns a URL, include it in your final answer as [Download PDF](url)
+5. If a tool fails, try a different approach — do not repeat the same failing tool call
+6. Use tools only when necessary — if you already have the answer, return final immediately
 `;
 
   emit({ type: "thinking", message: "Retrieving relevant memories..." });
@@ -100,7 +123,7 @@ ${memoryContext || "None"}
       rawContent = JSON.stringify(llmResponse.content);
     }
 
-    rawContent = rawContent.replace(/```json|```/g, "").trim();
+    rawContent = extractJSON(rawContent);
     console.log("RAW LLM OUTPUT:", rawContent);
 
     let response: any;
@@ -170,4 +193,19 @@ ${memoryContext || "None"}
 
   emit({ type: "error", message: "Maximum iterations reached" });
   return "Maximum iterations reached";
+}
+
+function extractJSON(raw: string): string {
+  // Strip markdown fences
+  let cleaned = raw.replace(/```json|```/g, "").trim();
+
+  // Find first { and last } — ignore any text before/after
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+
+  if (start !== -1 && end !== -1 && end > start) {
+    return cleaned.slice(start, end + 1);
+  }
+
+  return cleaned; // fallback — let JSON.parse throw
 }

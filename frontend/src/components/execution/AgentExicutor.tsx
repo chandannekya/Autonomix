@@ -69,7 +69,7 @@ const StepRow: React.FC<{ step: SSEStep }> = ({ step }) => {
         <div className="pl-4 text-[10px] text-text-muted font-mono">
           input:{" "}
           <span className="text-cyan-300/60">
-            `{step.input.slice(0, 80)}
+            `{step.input?.slice(0, 80)}
             {step.input.length > 80 ? "..." : ""}`
           </span>
         </div>
