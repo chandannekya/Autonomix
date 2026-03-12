@@ -21,11 +21,26 @@ model User {
 }
 
 model AgentConfig {
-  id            String   @id @default(uuid())
+  id            String     @id @default(uuid())
   name          String
   tools         String[]
   role          String
   memoryEnabled Boolean
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  run           AgentRun[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("agent_config")
+}
+
+model AgentRun {
+  id        String   @id @default(uuid())
+  agentId   String
+  task      String
+  response  String
+  createdAt DateTime @default(now())
+
+  agent AgentConfig @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("agent_run")
 }

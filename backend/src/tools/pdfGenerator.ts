@@ -31,7 +31,7 @@ export const pdfGenerator = async (content: string): Promise<string> => {
     let result;
     try {
       result = await cloudinary.uploader.upload(filePath, {
-        resource_type: "auto", // ✅ not "raw"
+        resource_type: "auto", 
         format: "pdf",
         folder: "autonomix-reports",
         access_mode: "public",

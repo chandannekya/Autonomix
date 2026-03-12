@@ -5,6 +5,7 @@ const endPoints = {
   createAgent: "agents/create",
   getAgents: "agents",
   runAgent: "agent/run",
+  runHistory: "agent/:id/run",
 };
 
 export interface AgentResponse {
@@ -80,4 +81,11 @@ export const streamAgentRun = (
   };
 
   return eventSource;
+};
+
+export const getRunHistory = async (agentId: string) => {
+  const url = endPoints.runHistory.replace(":id", agentId);
+
+  const response = await api.get(url);
+  return response.data;
 };

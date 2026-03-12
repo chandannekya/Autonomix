@@ -13,6 +13,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
+import SessionHistory from "./SessionHistory";
 import { useAgentStore } from "@/store/useAgentStore";
 import ReactMarkdown from "react-markdown";
 import { streamAgentRun, SSEStep } from "@/services/agentApis";
@@ -501,6 +502,13 @@ const AgentExecutor: React.FC = () => {
               </button>
             </div>
           </div>
+
+          <details className="border border-border-soft rounded-xl mt-4 bg-bg-secondary">
+            <summary className="px-5 py-3 font-mono text-[11px] text-text-muted uppercase tracking-widest cursor-pointer hover:text-text-primary transition-colors">
+              📋 Session History
+            </summary>
+            <SessionHistory agentId={activeAgent.id} />
+          </details>
 
           <div className="mt-2 flex items-center justify-between px-1">
             <span className="text-[9px] text-text-disabled font-mono uppercase tracking-widest">

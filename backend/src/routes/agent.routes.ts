@@ -1,5 +1,6 @@
 import express from "express";
 import { runAgent } from "../agents/agentExecutor.js";
+import { getAgentRunHistory } from "../services/agent.service.js";
 
 const router = express.Router();
 
@@ -41,5 +42,7 @@ router.get("/run/stream", async (req, res) => {
   await runAgent(id, task, JSON.parse(history || "[]"), send);
   res.end();
 });
+
+router.get("/:id/run", getAgentRunHistory);
 
 export default router;

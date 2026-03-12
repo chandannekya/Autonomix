@@ -185,6 +185,10 @@ ${memoryContext || "None"}
         await storeMemory(agent.id, `User: ${task}\nAgent: ${response.answer}`);
       }
 
+      await prisma.agentRun.create({
+        data: { agentId, task, response: response.answer },
+      });
+
       return response.answer;
     }
 
