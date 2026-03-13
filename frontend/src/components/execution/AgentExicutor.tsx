@@ -138,7 +138,7 @@ const AgentExecutor: React.FC = () => {
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const activeAgent = useAgentStore((state) => state.activeAgent);
-  
+
   // Auto-scroll on new logs
   useEffect(() => {
     if (scrollRef.current) {
@@ -182,6 +182,22 @@ const AgentExecutor: React.FC = () => {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
+  };
+
+  const handleStop = () => {
+    eventSourceRef.current?.close();
+    // if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    const ts = new Date().toLocaleTimeString([], { hour12: false });
+    setLogs((prev) => [
+      ...prev,
+      {
+        kind: "error",
+        text: "EXECUTION_CANCELLED — stopped by user",
+        timestamp: ts,
+      },
+    ]);
+    setIsRunning(false);
+    console.log(isRunning, "is runnig");
   };
 
   const handleClearSession = () => {
@@ -495,14 +511,14 @@ const AgentExecutor: React.FC = () => {
                 </span>
               )}
               <button
-                onClick={toggleExecution}
-                disabled={!task.trim() || isRunning}
+                onClick={isRunning ? handleStop : toggleExecution} // ✅ correct
+                disabled={!isRunning && !task.trim()} // ✅ never disabled when running
                 className={`flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200 active:scale-90
-                  ${
-                    isRunning
-                      ? "bg-bg-tertiary text-text-primary cursor-not-allowed border border-border-soft"
-                      : "bg-accent-cyan text-bg-primary hover:brightness-110 disabled:opacity-20 disabled:bg-bg-tertiary disabled:text-text-disabled"
-                  }`}
+    ${
+      isRunning
+        ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
+        : "bg-accent-cyan text-bg-primary hover:brightness-110 disabled:opacity-20 disabled:bg-bg-tertiary disabled:text-text-disabled"
+    }`}
               >
                 {isRunning ? (
                   <Square size={15} fill="currentColor" />

@@ -203,13 +203,50 @@ function extractJSON(raw: string): string {
   // Strip markdown fences
   let cleaned = raw.replace(/```json|```/g, "").trim();
 
-  // Find first { and last } — ignore any text before/after
+  // Find the first {
   const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}");
+  if (start === -1) return cleaned;
 
-  if (start !== -1 && end !== -1 && end > start) {
+  // Walk string tracking brace depth
+  let depth = 0;
+  let end = -1;
+  let inString = false;
+  let escape = false;
+
+  for (let i = start; i < cleaned.length; i++) {
+    const char = cleaned[i];
+
+    if (escape) {
+      escape = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      escape = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+
+    // Only count braces outside of strings
+    if (!inString) {
+      if (char === "{") depth++;
+      else if (char === "}") {
+        depth--;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+  }
+
+  if (end !== -1) {
     return cleaned.slice(start, end + 1);
   }
 
-  return cleaned; // fallback — let JSON.parse throw
+  return cleaned;
 }
