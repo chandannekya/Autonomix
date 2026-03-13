@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, Children } from "react";
 import {
   Square,
   Cpu,
@@ -138,7 +138,7 @@ const AgentExecutor: React.FC = () => {
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const activeAgent = useAgentStore((state) => state.activeAgent);
-
+  
   // Auto-scroll on new logs
   useEffect(() => {
     if (scrollRef.current) {
@@ -412,6 +412,16 @@ const AgentExecutor: React.FC = () => {
                             <span className="px-1 py-0.5 rounded bg-bg-tertiary text-accent-cyan text-[11px]">
                               {children}
                             </span>
+                          ),
+                          a: ({ href, children }) => (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-accent-cyan underline underline-offset-2 hover:brightness-125 transition-all"
+                            >
+                              {children}
+                            </a>
                           ),
                         }}
                       >

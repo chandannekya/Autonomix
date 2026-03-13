@@ -25,6 +25,11 @@ const ExampleCard: React.FC<cardProps> = ({ cardData }) => {
     setActiveAgent(cardData);
     router.push(`/runs?id=${cardData.id}`);
   };
+  // const activeAgent = useAgentStore((state) => state.activeAgent);
+  // const clearAgent = useAgentStore((state) => state.clearActiveAgent);
+  // if (activeAgent?.id === cardData.id) {
+  //   clearAgent();
+  // }
 
   const onDeleteHandle = async () => {
     if (!confirm(`Delete agent "${cardData.name}"?`)) return;
