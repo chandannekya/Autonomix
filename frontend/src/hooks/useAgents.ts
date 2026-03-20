@@ -4,7 +4,12 @@ import {
   useQuery,
   UseMutationOptions,
 } from "@tanstack/react-query";
-import { createAgentApi, getAgents, runAgent } from "../services/agentApis";
+import {
+  createAgentApi,
+  getAgents,
+  getRunHistory,
+  runAgent,
+} from "../services/agentApis";
 
 interface AgentResponse {
   data: string;
@@ -44,5 +49,14 @@ export const useRunAgent = (
   return useMutation<AgentResponse, Error, RunAgentVariables>({
     mutationFn: runAgent,
     ...options,
+  });
+};
+
+export const useAgentRuns = (agentId: string) => {
+  return useQuery({
+    queryKey: ["run", agentId],
+    queryFn: () => getRunHistory(agentId),
+    enabled: !!agentId,
+    staleTime: 1000 * 30,
   });
 };

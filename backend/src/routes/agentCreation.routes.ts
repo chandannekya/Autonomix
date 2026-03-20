@@ -42,4 +42,15 @@ router.get("/:id", async (req, res) => {
   res.json(agentConfig);
 });
 
+router.delete("/:id/memory", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ChromaClient } = await import("chromadb");
+    const client = new ChromaClient();
+    await client.deleteCollection({ name: `agent_memory_${id}` });
+    res.status(200).json({ message: "Memory cleared" });
+  } catch (error) {
+    res.status(500).json({ message: "Error clearing memory" });
+  }
+});
 export default router;
