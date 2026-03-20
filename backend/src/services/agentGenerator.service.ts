@@ -25,6 +25,8 @@ export async function generateAgentConfig(userPromt: string) {
     - calculator
     - pdf_generator
     - summarizer
+    - send_email
+    - google_calendar
     Do not include explanations.
     Do not include markdown.
     Return ONLY valid JSON in this format:

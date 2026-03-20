@@ -10,5 +10,12 @@ export const summarizer = async (text: string) => {
     `Summarize this text in 5 bullet points:\n\n${text}`,
   );
 
-  return response.content;
+  const content = response.content;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return (content as Array<{ text?: string }>)
+      .map((part) => part.text || "")
+      .join("");
+  }
+  return String(content);
 };
