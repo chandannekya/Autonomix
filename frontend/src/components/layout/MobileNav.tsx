@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import {
   Menu,
   X,
@@ -29,6 +30,7 @@ const menuItems = [
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
     // ✅ Only renders on mobile
@@ -81,6 +83,24 @@ export default function MobileNav() {
               );
             })}
           </nav>
+          {session?.user && (
+            <div className="flex items-center gap-2 p-3 border-t border-border-soft">
+              <img
+                src={session.user.image || ""}
+                className="w-6 h-6 rounded-full"
+                alt="avatar"
+              />
+              <span className="text-[10px] font-mono text-text-muted truncate">
+                {session.user.name}
+              </span>
+              <button
+                onClick={() => signOut()}
+                className="ml-auto text-[9px] text-text-disabled hover:text-red-400 transition-colors font-mono uppercase"
+              >
+                logout
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

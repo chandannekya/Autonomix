@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import agentRoutes from "./routes/agent.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 import agentCreationRoutes from "./routes/agentCreation.routes.js";
 import { cloudnaryConfig } from "./config/cloudinary.js";
 import { google } from "googleapis";
@@ -15,6 +16,7 @@ app.use(
 app.use(express.json());
 app.use("/api/agents", agentCreationRoutes);
 app.use("/api/agent", agentRoutes);
+app.use("/api/auth", authRoutes);
 
 // // ── Temporary Google OAuth callback — delete after getting token ──
 // app.get("/auth/google/callback", async (req, res) => {

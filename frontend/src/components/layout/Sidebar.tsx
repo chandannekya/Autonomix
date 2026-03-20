@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
   Plus,
@@ -25,6 +26,7 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
     <div className="relative w-60 font-mono h-screen bg-bg-secondary border-r border-border-soft text-text-primary flex flex-col overflow-hidden">
@@ -102,6 +104,25 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {session?.user && (
+        <div className="flex items-center gap-2 p-3 border-t border-border-soft">
+          <img
+            src={session.user.image || ""}
+            className="w-6 h-6 rounded-full"
+            alt="avatar"
+          />
+          <span className="text-[10px] font-mono text-text-muted truncate">
+            {session.user.name}
+          </span>
+          <button
+            onClick={() => signOut()}
+            className="ml-auto text-[9px] text-text-disabled hover:text-red-400 transition-colors font-mono uppercase"
+          >
+            logout
+          </button>
+        </div>
+      )}
 
       {/* Bottom status */}
       <div className="relative px-5 py-4 border-t border-border-soft">
