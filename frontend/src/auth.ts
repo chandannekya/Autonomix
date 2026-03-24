@@ -8,19 +8,19 @@ declare module "next-auth" {
   interface Session {
     user: {
       googleId: string;
-      id: string;
     } & DefaultSession["user"];
+    backendToken: string;
   }
 
   interface Profile {
-    picture?: any; // ✅ fixes (profile as any).picture
+    picture?: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     googleId?: string;
-    id?: string;
+    backendToken?: string;
     image?: string;
   }
 }
@@ -40,25 +40,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.googleId = account.providerAccountId;
         token.email = profile.email;
         token.name = profile.name;
-        token.image = profile.picture; // ✅ no any — typed above
+        token.image = profile.picture;
 
-        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/user`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            googleId: account.providerAccountId,
-            email: profile.email,
-            name: profile.name,
-            image: profile.picture, // ✅ no any
-          }),
-        });
+        const res = await fetch(
+          // ✅ removed any
+          `${process.env.NEXT_PUBLIC_BASE_URL}/auth/user`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              googleId: account.providerAccountId,
+              email: profile.email,
+              name: profile.name,
+              image: profile.picture,
+            }),
+          },
+        );
+
+        const data = await res.json();
+        token.backendToken = data.token;
       }
+
       return token;
     },
 
     async session({ session, token }) {
-      session.user.googleId = token.googleId as string;
-      session.user.id = token.sub as string;
+      session.user.googleId = token.googleId ?? "";
+      session.backendToken = token.backendToken ?? "";
       return session;
     },
   },

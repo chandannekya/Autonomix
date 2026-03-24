@@ -298,6 +298,7 @@ TOOL DESCRIPTIONS:
   If user says "tomorrow" or "next Monday" — calculate the actual date before calling the tool.
 
 CRITICAL RULES:
+0. YOUR ENTIRE RESPONSE MUST BE VALID JSON ONLY — no prose, no markdown, no explanation before or after the JSON. If you write anything outside {}, the system will crash.
 1. "input" must ALWAYS be a plain string — never an object or array
 2. "tool" must be one of: ${agent.tools.join(", ")}
 3. Never add text outside the JSON object
