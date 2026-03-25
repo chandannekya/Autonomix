@@ -4,12 +4,12 @@ import { getAgentRunHistoryService } from "../services/agent.service.js";
 
 export const runAgentHandler = async (req: Request, res: Response) => {
   const { id, task, history } = req.body;
-
+  const userId = req.userId;
   if (!task) {
     return res.status(400).json({ error: "Task is required" });
   }
 
-  const result = await runAgent(id, task, history ?? [], () => {}); // ✅ no-op emit
+  const result = await runAgent(id, task, history ?? [], () => {}, userId); // ✅ no-op emit
   return res.json({ data: result });
 };
 
@@ -19,9 +19,11 @@ export const streamAgentHandler = async (req: Request, res: Response) => {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders(); // ✅ flush immediately so browser knows stream started
 
-  const id = req.query.id as string;
-  const task = req.query.task as string;
-  const history = req.query.history as string;
+  // Automatically parsed by express.json()
+  const id = req.body.id as string;
+  const task = req.body.task as string;
+  const history = req.body.history || []; // It's already an array!
+  const userID = req.userId;
 
   if (!id || !task) {
     res.write(
@@ -35,10 +37,19 @@ export const streamAgentHandler = async (req: Request, res: Response) => {
     res.write(`data: ${JSON.stringify(data)}\n\n`);
   };
 
-  await runAgent(id, task, JSON.parse(history || "[]"), send);
-  res.end();
+  try {
+    // Pass history directly, no need for JSON.parse()
+    await runAgent(id, task, history, send, userID);
+  } catch (error) {
+    console.error("Agent Run Error:", error);
+    send({
+      type: "error",
+      message: "An error occurred while running the agent.",
+    });
+  } finally {
+    res.end();
+  }
 };
-
 export const getAgentHistoryHandler = async (req: Request, res: Response) => {
   const { id } = req.params;
   const agentId = id as string;

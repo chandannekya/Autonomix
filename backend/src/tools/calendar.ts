@@ -1,28 +1,33 @@
 import { google } from "googleapis";
-
-// ─── OAuth2 Client ────────────────────────────────────────────────────────────
-
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI,
-);
-
-oauth2Client.setCredentials({
-  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-});
-// console.log("refresh token", process.env.GOOGLE_REFRESH_TOKEN);
-
-const calendar = google.calendar({ version: "v3", auth: oauth2Client });
-
-// ─── Tool ─────────────────────────────────────────────────────────────────────
-
-// Input format:
-// CREATE: "action:create|title:Meeting|date:2025-12-25|time:14:00|duration:60|description:Team sync"
-// LIST:   "action:list|days:7"
-
-export const googleCalendar = async (input: string): Promise<string> => {
+import { prisma } from "../config/prisma.js";
+export const googleCalendar = async (
+  input: string,
+  userId: string,
+): Promise<string> => {
   try {
+    if (!userId) {
+      return "Error: User ID is required to access Google Calendar.";
+    }
+    const integration = await prisma.userIntegration.findUnique({
+      where: { userId_provider: { userId, provider: "google_calendar" } },
+    });
+
+    if (!integration || !integration.refreshToken) {
+      return "Error: Google Calendar is not connected. Please ask the user to connect it in the Tools menu.";
+    }
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI,
+    );
+
+    oauth2Client.setCredentials({
+      refresh_token: integration.refreshToken,
+      access_token: integration.accessToken || undefined,
+    });
+    // console.log("refresh token", process.env.GOOGLE_REFRESH_TOKEN);
+
+    const calendar = google.calendar({ version: "v3", auth: oauth2Client });
     const parts: Record<string, string> = {};
 
     input.split("|").forEach((part) => {

@@ -76,38 +76,82 @@ export const streamAgentRun = async (
   onStep: (step: SSEStep) => void,
   onDone: () => void,
   onError: (msg: string) => void,
-): Promise<EventSource> => {
+): Promise<void> => {
   const session = await getSession();
   const token = session?.backendToken ?? "";
 
-  const query = new URLSearchParams({
-    id: data.id,
-    task: data.task,
-    history: JSON.stringify(data.history),
-    token,
-  });
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/agent/run/stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
 
-  const eventSource = new EventSource(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/agent/run/stream?${query}`,
-  );
+        body: JSON.stringify({
+          id: data.id,
+          task: data.task,
+          history: data.history,
+          token: token,
+        }),
+      },
+    );
 
-  eventSource.onmessage = (e) => {
-    const step: SSEStep = JSON.parse(e.data);
-    onStep(step);
-
-    if (step.type === "final" || step.type === "error") {
-      eventSource.close();
-      onDone();
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
 
-  eventSource.onerror = () => {
-    eventSource.close();
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    if (!reader) {
+      throw new Error("Response body is not streamable.");
+    }
+
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        onDone();
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split("\n");
+
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        // Look for the standard SSE "data: " prefix
+        if (line.trim().startsWith("data:")) {
+          const dataStr = line.replace(/^data:\s*/, "").trim();
+
+          if (dataStr) {
+            try {
+              const step: SSEStep = JSON.parse(dataStr);
+              onStep(step);
+
+              // Close out if we hit the end states
+              if (step.type === "final" || step.type === "error") {
+                onDone();
+              }
+            } catch (e) {
+              console.error("Failed to parse SSE JSON chunk:", e);
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Fetch Stream Error:", err);
     onError("SSE_CONNECTION_LOST");
     onDone();
-  };
-
-  return eventSource;
+  }
 };
 
 export const getRunHistory = async (agentId: string) => {

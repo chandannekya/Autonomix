@@ -251,6 +251,7 @@ export async function runAgent(
   task: string,
   history: { role: string; content: string }[] = [],
   emit: (event: object) => void,
+  userId: string,
 ) {
   // 1️⃣ Fetch agent config
   const agent = await prisma.agentConfig.findUnique({
@@ -450,7 +451,7 @@ ${memoryContext || "None"}
             ? response.input
             : JSON.stringify(response.input);
 
-        toolResult = await toolFunc(toolInput);
+        toolResult = await toolFunc(toolInput, userId);
 
         if (typeof toolResult !== "string") {
           toolResult = JSON.stringify(toolResult);

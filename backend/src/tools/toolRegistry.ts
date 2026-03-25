@@ -4,7 +4,10 @@ import { summarizer } from "./summarizer.js";
 import { pdfGenerator } from "./pdfGenerator.js";
 import { sendEmail } from "./emailSender.js";
 import { googleCalendar } from "./calendar.js";
-export const tools: Record<string, (input: string) => Promise<string>> = {
+export const tools: Record<
+  string,
+  (input: string, userId: string) => Promise<string>
+> = {
   calculator,
   web_search: webSearch,
   summarizer,
