@@ -41,7 +41,6 @@ export const saveOAuthToken = async (
     const userInDb = await prisma.user.findUnique({
       where: { id: userId },
     });
-    console.log("DID PRISMA FIND THE USER?", userInDb ? "YES!" : "NO.");
     const integration = await prisma.userIntegration.upsert({
       where: { userId_provider: { userId, provider } },
       update: { refreshToken, accessToken, authType: "oauth", isActive: true },

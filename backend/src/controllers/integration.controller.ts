@@ -80,7 +80,6 @@ export const removeIntegrationController = async (
 
 export const googleOAuthStart = (req: Request, res: Response) => {
   const userId = req.userId; // ✅ from middleware
-  console.log(userId, "user");
   if (!userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -88,7 +87,7 @@ export const googleOAuthStart = (req: Request, res: Response) => {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `http://localhost:4000/api/integrations/google/callback`,
+    process.env.GOOGLE_REDIRECT_URI,
   );
 
   const state = Buffer.from(JSON.stringify({ userId })).toString("base64");
@@ -116,7 +115,7 @@ export const googleOAuthCallback = async (req: Request, res: Response) => {
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      `http://localhost:4000/api/integrations/google/callback`,
+      process.env.GOOGLE_REDIRECT_URI,
     );
 
     const { tokens } = await oauth2Client.getToken(code as string);
@@ -124,8 +123,6 @@ export const googleOAuthCallback = async (req: Request, res: Response) => {
     if (!tokens.refresh_token) {
       return res.status(400).send("No refresh token. Try again.");
     }
-    console.log(userId, "userid");
-
     const cleanUserId = userId.trim();
 
     await saveOAuthToken(
@@ -134,9 +131,8 @@ export const googleOAuthCallback = async (req: Request, res: Response) => {
       tokens.refresh_token,
       tokens.access_token ?? undefined,
     );
-    console.log("all okay till here");
     return res.redirect(
-      `http://localhost:3000/api/integrations?connected=google_calendar`,
+      `${process.env.FRONTEND_URL || "http://localhost:3000"}/api/integrations?connected=google_calendar`,
     );
   } catch (error) {
     const err = error as Error;
