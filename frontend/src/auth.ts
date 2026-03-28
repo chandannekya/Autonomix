@@ -13,7 +13,7 @@ declare module "next-auth" {
   }
 
   interface Profile {
-    picture?: string;
+    picture?: any;
   }
 }
 
