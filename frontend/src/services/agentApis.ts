@@ -165,7 +165,6 @@ export const saveApiKey = async (data: SaveApiKeyParams): Promise<unknown> => {
 
 export const getIntegrations = async (): Promise<Integration[]> => {
   const res = await api.get(endPoints.getUserIntegrations);
-  console.log(res.data, "intregation ");
   return res.data.data;
 };
 

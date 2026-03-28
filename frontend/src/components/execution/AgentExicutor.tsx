@@ -200,7 +200,6 @@ const AgentExecutor: React.FC = () => {
       },
     ]);
     setIsRunning(false);
-    console.log(isRunning, "is runnig");
   };
 
   const handleClearSession = () => {

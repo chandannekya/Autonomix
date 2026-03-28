@@ -14,7 +14,6 @@ type AgentRun = {
 export default function SessionHistory({ agentId }: { agentId: string }) {
   const { data, isLoading } = useAgentRuns(agentId);
   const runs = data?.data ?? [];
-  console.log(runs, "dtat history");
 
   if (isLoading) {
     return (

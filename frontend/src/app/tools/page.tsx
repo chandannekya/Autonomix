@@ -19,8 +19,6 @@ export default function ToolsPage() {
   const { data: integrations = [], isLoading } = useIntegrations();
   const [selectedTool, setSelectedTool] = useState<any | null>(null);
 
-  console.log(integrations, " integration data");
-
   const tools = [
     {
       name: "Web Search",
