@@ -41,6 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.email = profile.email;
         token.name = profile.name;
         token.image = profile.picture;
+        console.log("user creation start");
         const res = await fetch(
           // ✅ removed any
           `${process.env.NEXT_PUBLIC_BASE_URL}/auth/user`,
@@ -59,6 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
 
         const data = await res.json();
+        console.log("user created", data);
         token.backendToken = data.token;
       }
 
