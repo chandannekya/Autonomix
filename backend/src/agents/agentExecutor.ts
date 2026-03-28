@@ -71,12 +71,11 @@ function getRoleBehavior(role: string): string {
 - Include best time to visit, transport options, accommodation range
 - Use web_search for current prices, visa requirements, and travel advisories
 - Always mention safety tips for the destination
-- When user asks for PDF of itinerary, ALWAYS call pdf_generator tool with the full itinerary content
+- CRITICAL: When user asks for a PDF or Email of an existing plan, DO NOT search the web again. Copy the exact itinerary from the "Conversation history" into the tool input.
 - When user asks to summarize, ALWAYS call summarizer tool first
 - Never skip tool calls — the user can see which tools you used
-- When user asks to email the plan, ALWAYS call send_email with the full itinerary in the body
 - When user asks to schedule something, ALWAYS call google_calendar with exact date and time
-- Chain tools naturally: web_search → summarizer → send_email in one run
+- Chain tools naturally: web_search (if new destination) → google_calendar → pdf_generator → send_email
     `;
   }
 
@@ -278,7 +277,6 @@ ${roleBehavior}
 
 AVAILABLE TOOLS: ${agent.tools.join(", ")}
 
-
 If you cannot complete all requested actions due to iteration limits, 
 complete as many as possible and tell the user exactly which ones were done 
 and which ones were not. Never pretend to have done something you haven't.
@@ -289,8 +287,11 @@ TOOL DESCRIPTIONS:
 - summarizer: Summarize a long piece of text into key points
 - pdf_generator: Generate a PDF from markdown text content and return a download URL
 - send_email: Send an email to any address.
-  Format: "to:email@gmail.com|subject:Subject here|body:Full email content here"
+  Input must be a JSON object with "to", "subject", and "body" keys.
+  Example input: {"to": "john@gmail.com", "subject": "Trip Plan", "body": "Here is your Goa itinerary..."}
+  Always ask user for their email address if not provided before calling this tool.
   Example: "to:john@gmail.com|subject:Trip Plan|body:Here is your Goa itinerary..."
+  WARNING: For the body parameter, replace all newlines with \\n and escape all quotes. Do not use raw line breaks inside the string.
   Always ask user for their email address if not provided before calling this tool.
 - google_calendar: Create or list Google Calendar events.
   To CREATE: "action:create|title:Meeting|date:2025-12-25|time:14:00|duration:60|description:Team sync"
@@ -307,14 +308,18 @@ CRITICAL RULES:
 5. If pdf_generator returns a URL, include it in final answer as [Download PDF](url)
 6. If a tool fails, try a different approach — do not repeat the same failing tool
 7. Use tools proactively — use web_search when current data improves your answer
-8. Never say you cannot help — always attempt the task
-9. IMPORTANT: The user can see your tool usage in real time. If you skip a tool the user asked you to use, they will know. Always call the requested tool even if you think you already have the answer
+8. DO NOT REPEAT YOURSELF: Never call the exact same tool with the exact same input more than once. If you already searched for it, use the results you have.
+9. TRUST THE HISTORY: If the user asks you to email, summarize, or generate a PDF of something you ALREADY discussed, DO NOT use web_search. Extract the information directly from the "Conversation history".
 10. For send_email — if user has not provided an email address, ask for it before calling the tool
 11. For google_calendar — always convert relative dates like "tomorrow", "next week" to actual YYYY-MM-DD format before calling
 12. For send_email — the body should contain the full formatted content, not a summary
 13. Never say you have completed an action without actually calling the tool
 14. Never fabricate tool results — if you cannot complete all tasks, say so honestly
 15. For multiple calendar events, call google_calendar multiple times — once per event
+16. TOOL CHAINING: If you need to generate a PDF and email it, call pdf_generator first, wait for the result, and THEN call send_email with the PDF link included.
+17. NEVER call web_search more than once for the same task.
+18. After getting search results, you MUST use them to proceed to next step (pdf/email).
+19. If sufficient data is available, STOP calling tools and return final.
 TO USE A TOOL:
 {
   "action": "tool",
@@ -366,18 +371,28 @@ WHEN TASK IS COMPLETE:
 TODAY'S DATE: ${today} (${todayFormatted})
 Use this to calculate "tomorrow", "next Monday", "in 3 days" etc.
 
-Conversation history:
+--- PAST CONVERSATION HISTORY ---
 ${historyText}
+---------------------------------
 
-Current task: ${task}
-
-Relevant past memory:
+--- RELEVANT MEMORY ---
 ${memoryContext || "None"}
+-----------------------
+
+==================================================
+🎯 CURRENT NEW DIRECTIVE (YOU MUST EXECUTE THIS):
+${task}
+==================================================
+
+CRITICAL INSTRUCTION: 
+Read the "CURRENT NEW DIRECTIVE" above. This is your ONLY goal right now. 
+Do not restart tasks from the past conversation history. 
+Use the history ONLY if the current directive asks you to do something with it (e.g., "email me the plan we just made").
 `;
   let iteration = 0;
 
   // 7️⃣ Autonomous loop
-  while (iteration < 5) {
+  while (iteration < 10) {
     emit({
       type: "thinking",
       message: `Reasoning... (iteration ${iteration + 1})`,
@@ -407,7 +422,7 @@ ${memoryContext || "None"}
       tool?: string;
       input?: unknown;
       reason?: string;
-      answer?: string;
+      answer?: unknown;
     };
 
     try {
@@ -494,21 +509,28 @@ ${memoryContext || "None"}
 
     // 9️⃣ Final answer
     if (response.action === "final") {
-      emit({ type: "final", answer: response.answer });
+      const finalAnswer =
+        typeof response.answer === "string"
+          ? response.answer
+          : JSON.stringify(response.answer, null, 2);
+      emit({ type: "final", answer: finalAnswer });
 
       if (agent.memoryEnabled) {
-        await storeMemory(agent.id, `User: ${task}\nAgent: ${response.answer}`);
+        await storeMemory(agent.id, `User: ${task}\nAgent: ${finalAnswer}`);
       }
 
       await prisma.agentRun.create({
         data: {
           agentId: agent.id,
           task,
-          response: response.answer ?? "",
+          response:
+            typeof response.answer === "string"
+              ? response.answer
+              : JSON.stringify(response.answer, null, 2),
         },
       });
 
-      return response.answer;
+      return finalAnswer;
     }
 
     iteration++;

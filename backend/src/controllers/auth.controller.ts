@@ -10,7 +10,7 @@ export const authHandler = async (req: Request, res: Response) => {
     const user = await upsertUser(googleId, email, name, image);
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
-      expiresIn: 60 * 60 * 24,
+      expiresIn: 30 * 24 * 60 * 60,
     });
 
     return res.status(200).json({ data: user, token });

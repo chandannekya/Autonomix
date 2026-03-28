@@ -67,7 +67,8 @@ export const runAgent = async (data: {
   return execution.data;
 };
 
-export const streamAgentRun = async (
+// In agentApis.ts — if using fetch stream, store the AbortController:
+export const streamAgentRun = (
   data: {
     id: string;
     task: string;
@@ -76,82 +77,79 @@ export const streamAgentRun = async (
   onStep: (step: SSEStep) => void,
   onDone: () => void,
   onError: (msg: string) => void,
-): Promise<void> => {
-  const session = await getSession();
-  const token = session?.backendToken ?? "";
+): AbortController => {
+  const controller = new AbortController();
 
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/agent/run/stream`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+  // run fetch in background
+  (async () => {
+    const session = await getSession();
+    const token = session?.backendToken ?? "";
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/agent/run/stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            id: data.id,
+            task: data.task,
+            history: data.history,
+            token,
+          }),
+          signal: controller.signal, // ✅ allows cancellation
         },
+      );
 
-        body: JSON.stringify({
-          id: data.id,
-          task: data.task,
-          history: data.history,
-          token: token,
-        }),
-      },
-    );
+      if (!response.ok) throw new Error(`HTTP error ${response.status}`);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder("utf-8");
+      if (!reader) throw new Error("Response body not streamable");
 
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder("utf-8");
+      let buffer = "";
 
-    if (!reader) {
-      throw new Error("Response body is not streamable.");
-    }
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          onDone();
+          break;
+        }
 
-    let buffer = "";
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (done) {
-        onDone();
-        break;
-      }
-
-      buffer += decoder.decode(value, { stream: true });
-
-      const lines = buffer.split("\n");
-
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
-        // Look for the standard SSE "data: " prefix
-        if (line.trim().startsWith("data:")) {
-          const dataStr = line.replace(/^data:\s*/, "").trim();
-
-          if (dataStr) {
-            try {
-              const step: SSEStep = JSON.parse(dataStr);
-              onStep(step);
-
-              // Close out if we hit the end states
-              if (step.type === "final" || step.type === "error") {
-                onDone();
+        for (const line of lines) {
+          if (line.trim().startsWith("data:")) {
+            const dataStr = line.replace(/^data:\s*/, "").trim();
+            if (dataStr) {
+              try {
+                const step: SSEStep = JSON.parse(dataStr);
+                onStep(step);
+                if (step.type === "final" || step.type === "error") {
+                  onDone();
+                  return;
+                }
+              } catch (e) {
+                console.error("Failed to parse SSE chunk:", e);
               }
-            } catch (e) {
-              console.error("Failed to parse SSE JSON chunk:", e);
             }
           }
         }
       }
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name === "AbortError") return; // cancelled by user
+      onError("SSE_CONNECTION_LOST");
+      onDone();
     }
-  } catch (err) {
-    console.error("Fetch Stream Error:", err);
-    onError("SSE_CONNECTION_LOST");
-    onDone();
-  }
+  })();
+
+  return controller; // ✅ caller can call controller.abort() to cancel
 };
 
 export const getRunHistory = async (agentId: string) => {

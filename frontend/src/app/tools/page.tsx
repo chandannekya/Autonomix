@@ -55,7 +55,7 @@ export default function ToolsPage() {
       name: "Email Sender",
       description: "Send emails to any address via SMTP integration.",
       icon: Mail,
-      requiresIntegration: false,
+      requiresIntegration: true,
       provider: "sendgrid",
       authType: "apikey",
     },
