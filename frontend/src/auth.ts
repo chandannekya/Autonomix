@@ -41,7 +41,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.email = profile.email;
         token.name = profile.name;
         token.image = profile.picture;
-
         const res = await fetch(
           // ✅ removed any
           `${process.env.NEXT_PUBLIC_BASE_URL}/auth/user`,
