@@ -21,7 +21,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  agents AgentConfig[]
+  agents       AgentConfig[]
+  integrations UserIntegration[]
 
   @@map("users")
 }
@@ -51,4 +52,36 @@ model AgentRun {
   agent AgentConfig @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@map("agent_run")
+}
+
+model UserIntegration {
+  id       String @id @default(uuid())
+  userId   String
+  provider String
+  // "google_calendar" | "gmail" | "slack" | "notion" | "news_api" | "weather" | "custom"
+
+  authType String
+  // "oauth" | "apikey"
+
+  // ── OAuth fields ──────────────────────────────────────
+  refreshToken String?
+  accessToken  String?
+  expiresAt    DateTime?
+  scope        String?
+
+  // ── API Key fields ────────────────────────────────────
+  apiKey  String?
+  apiUrl  String? // for custom APIs only
+  apiName String? // display name for custom APIs
+
+  // ── Metadata ──────────────────────────────────────────
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Relations ─────────────────────────────────────────
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("user_integrations")
 }

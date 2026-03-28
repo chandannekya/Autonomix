@@ -15,7 +15,6 @@ type AgentData = {
 
 const Page = () => {
   const { data: agents = [], isLoading, error, refetch } = useAllAgents();
-  console.log(process.env.NEXT_PUBLIC_BASE_URL, agents, "base url");
 
   return (
     <section className="bg-bg-primary min-h-screen antialiased">

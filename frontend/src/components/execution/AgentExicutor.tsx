@@ -53,6 +53,8 @@ const StepRow: React.FC<{ step: SSEStep }> = ({ step }) => {
   }
 
   if (step.type === "tool_selected") {
+    const inputText =
+      typeof step.input === "string" ? step.input : JSON.stringify(step.input);
     return (
       <div className="pl-8 space-y-0.5">
         <div className="flex items-center gap-2 text-cyan-400 text-[11px] font-mono">
@@ -70,8 +72,8 @@ const StepRow: React.FC<{ step: SSEStep }> = ({ step }) => {
         <div className="pl-4 text-[10px] text-text-muted font-mono">
           input:{" "}
           <span className="text-cyan-300/60">
-            `{step.input?.slice(0, 80)}
-            {step.input.length > 80 ? "..." : ""}`
+            `{inputText?.slice(0, 80)}
+            {inputText?.length > 80 ? "..." : ""}`
           </span>
         </div>
       </div>
@@ -135,7 +137,8 @@ const AgentExecutor: React.FC = () => {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  // const eventSourceRef = useRef<EventSource | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const activeAgent = useAgentStore((state) => state.activeAgent);
 
@@ -152,7 +155,7 @@ const AgentExecutor: React.FC = () => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      eventSourceRef.current?.close();
+      abortControllerRef.current?.abort();
     };
   }, []);
 
@@ -185,7 +188,7 @@ const AgentExecutor: React.FC = () => {
   };
 
   const handleStop = () => {
-    eventSourceRef.current?.close();
+    abortControllerRef.current?.abort();
     // if (timeoutRef.current) clearTimeout(timeoutRef.current);
     const ts = new Date().toLocaleTimeString([], { hour12: false });
     setLogs((prev) => [
@@ -201,7 +204,7 @@ const AgentExecutor: React.FC = () => {
   };
 
   const handleClearSession = () => {
-    eventSourceRef.current?.close();
+    abortControllerRef.current?.abort();
     setHistory([]);
     setIsRunning(false);
     setLogs([
@@ -229,8 +232,10 @@ const AgentExecutor: React.FC = () => {
       ...prev,
       { kind: "directive", text: currentTask, timestamp },
     ]);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
-    const eventSource = streamAgentRun(
+    streamAgentRun(
       { id: activeAgent.id, task: currentTask, history: updatedHistory },
 
       // onStep
@@ -275,7 +280,7 @@ const AgentExecutor: React.FC = () => {
       },
     );
 
-    eventSourceRef.current = eventSource;
+    controller;
   };
   // ─── Render ──────────────────────────────────────────────────────────────────
 

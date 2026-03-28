@@ -1,10 +1,15 @@
 import { createTransport } from "nodemailer";
 
-export const sendEmail = async (
-  userMail: string,
-  message: string,
-  subject: string,
-): Promise<string> => {
+// Notice the curly braces added around to, subject, and body
+export const sendEmail = async ({
+  to,
+  subject,
+  body,
+}: {
+  to: string;
+  subject: string;
+  body: string;
+}): Promise<string> => {
   const transporter = createTransport({
     service: "gmail", // Shortcut for Gmail's SMTP settings - see Well-Known Services
     auth: {
@@ -17,14 +22,15 @@ export const sendEmail = async (
   });
 
   try {
+    console.log(to, body, subject, "mail object");
     await transporter.sendMail({
       from: `"AutonomiX Agent" <${process.env.MAIL_USER}>`,
-      to: userMail,
+      to,
       subject,
-      body: message,
+      text: body,
     });
 
-    return `Email sent successfully to ${userMail}`;
+    return `Email sent successfully to ${to}`;
   } catch (error) {
     const err = error as Error;
     return `Email sending failed: ${err.message}`;

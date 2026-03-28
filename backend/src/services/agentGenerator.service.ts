@@ -58,7 +58,11 @@ export async function generateAgentConfig(userPromt: string) {
   return parsed as Agent;
 }
 
-export async function createAgentConfig(name: string, promt: string) {
+export async function createAgentConfig(
+  name: string,
+  promt: string,
+  userId: string,
+) {
   // Save the agent config to the database or in-memory store
 
   const agent = await generateAgentConfig(promt);
@@ -68,17 +72,20 @@ export async function createAgentConfig(name: string, promt: string) {
       role: agent.role,
       tools: agent.tools,
       memoryEnabled: agent.memoryEnabled,
+      userId: userId,
     },
   });
 
   return savedAgent;
 }
 
-export async function getAgentConfigById(id: string) {
-  return await prisma.agentConfig.findUnique({ where: { id } });
+export async function getAgentConfigById(id: string, userId: string) {
+  return await prisma.agentConfig.findUnique({ where: { id, userId: userId } });
 }
 
-export async function getAllAgentConfigs() {
-  const agentConfigs = await prisma.agentConfig.findMany();
+export async function getAllAgentConfigs(userId: string) {
+  const agentConfigs = await prisma.agentConfig.findMany({
+    where: { userId: userId },
+  });
   return agentConfigs;
 }
