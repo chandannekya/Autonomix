@@ -415,7 +415,6 @@ Use the history ONLY if the current directive asks you to do something with it (
     }
 
     rawContent = extractJSON(rawContent);
-    console.log("RAW LLM OUTPUT:", rawContent);
 
     let response: {
       action: string;

@@ -4,7 +4,10 @@
   "main": "./src/server.ts",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -16,13 +19,16 @@
     "@langchain/core": "^1.1.29",
     "@langchain/google-genai": "^2.1.21",
     "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2",
     "axios": "^1.13.6",
     "chromadb": "^3.0.0",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
     "googleapis": "^171.4.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "langchain": "^1.2.28",
     "marked": "^17.0.5",
@@ -33,7 +39,6 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@prisma/client": "^7.4.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.0",

@@ -2,18 +2,18 @@ import { ChromaClient, CloudClient } from "chromadb";
 
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
-const client = new ChromaClient({
-  ssl: false,
-  host: "localhost",
-  port: 8000, // non-standard port based on your server config
-  database: "default_database",
-  headers: {},
-});
-// const client = new CloudClient({
-//   apiKey: process.env.CHROMA_API_KEY!,
-//   tenant: process.env.CHROMA_TENANT!,
-//   database: "Autonomix",
+// const client = new ChromaClient({
+//   ssl: false,
+//   host: "localhost",
+//   port: 8000, // non-standard port based on your server config
+//   database: "default_database",
+//   headers: {},
 // });
+const client = new CloudClient({
+  apiKey: process.env.CHROMA_API_KEY!,
+  tenant: process.env.CHROMA_TENANT!,
+  database: "Autonomix",
+});
 
 const embeddings = new GoogleGenerativeAIEmbeddings({
   apiKey: process.env.GOOGLE_API_KEY!,
@@ -34,8 +34,6 @@ export const storeMemory = async (agentId: string, data: string) => {
   const collection = await getCollection(agentId);
 
   const embedding = await embeddings.embedQuery(data);
-
-  console.log("VECTOR STORE SAVE:", agentId, data);
 
   await collection.add({
     ids: [Date.now().toString()],
