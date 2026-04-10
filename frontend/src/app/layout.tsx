@@ -22,6 +22,12 @@ export const metadata: Metadata = {
   title: "AutonomiX — Autonomous AI Agent Platform",
   description:
     "Build, configure and deploy autonomous AI agents with memory, tools and workflows.",
+  icons: {
+    icon: [
+      { url: '/favicon.png' },
+
+    ],
+  },
 };
 
 export default async function RootLayout({
@@ -36,14 +42,17 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <ReactQueryProvider>
             <div className="flex h-screen overflow-hidden  ">
-              <div className="hidden lg:flex">
-                <Sidebar />
-              </div>
+              {/* Only show sidebar if user is logged in */}
+              {session && (
+                <div className="hidden lg:flex">
+                  <Sidebar />
+                </div>
+              )}
 
               {/* Page Content */}
               <main className="flex-1 overflow-y-auto overflow-x-hidden bg-bg-primary  terminal-scroll">
-                {/* Mobile top bar — only visible below lg */}
-                <MobileNav />
+                {/* Mobile top bar — only visible below lg and if logged in */}
+                {session && <MobileNav />}
                 {children}
               </main>
             </div>

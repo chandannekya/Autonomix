@@ -27,14 +27,33 @@ const ColorButtons = () => (
   </div>
 );
 
-const AgentBuilder: React.FC = () => {
-  const [goal, setGoal] = useState("");
-  const [name, setName] = useState("");
+interface AgentBuilderProps {
+  defaultName?: string;
+  defaultGoal?: string;
+}
+
+const AgentBuilder: React.FC<AgentBuilderProps> = ({ defaultName = "", defaultGoal = "" }) => {
+  const [goal, setGoal] = useState(defaultGoal);
+  const [name, setName] = useState(defaultName);
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  React.useEffect(() => {
+    if (defaultName) setName(defaultName);
+    if (defaultGoal) {
+      setGoal(defaultGoal);
+      setTimeout(() => {
+        const ta = textareaRef.current;
+        if (ta) {
+          ta.style.height = "auto";
+          ta.style.height = Math.min(ta.scrollHeight, 100) + "px";
+        }
+      }, 0);
+    }
+  }, [defaultName, defaultGoal]);
 
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -58,7 +77,7 @@ const AgentBuilder: React.FC = () => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      textarea.style.height = textarea.scrollHeight + "px";
+      textarea.style.height = Math.min(textarea.scrollHeight, 130) + "px";
     }
   };
 
@@ -98,9 +117,12 @@ const AgentBuilder: React.FC = () => {
   const isDisabled = !name.trim() || !goal.trim() || status === "loading";
 
   return (
-    <div className="max-w-3xl mx-auto mt-16 px-6 py-6 rounded-lg border border-border-soft bg-bg-secondary">
+    <div className="w-full h-full rounded-2xl border border-border-strong bg-[#0c0c0c] p-4 md:p-5 shadow-xl relative overflow-hidden flex flex-col">
+      {/* Subtle top glow */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent-cyan/30 to-transparent" />
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 relative z-10">
         <div className="flex items-center gap-4">
           <ColorButtons />
           <h2 className="text-sm font-mono text-text-secondary">
@@ -129,7 +151,11 @@ const AgentBuilder: React.FC = () => {
         )}
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+
+        {/* Spacer at TOP — compresses as textarea grows, so growth goes upward */}
+        <div className="flex-1" />
+
         {/* Agent Name */}
         <div className="relative mb-3">
           <HatGlasses className="absolute left-3 top-4 text-text-secondary" />
@@ -143,11 +169,11 @@ const AgentBuilder: React.FC = () => {
           />
         </div>
 
-        {/* Agent Goal */}
-        <div className="relative mb-6">
+        {/* Agent Goal — grows upward, scrolls after max */}
+        <div className="relative mb-4">
           <SquareDashedBottomCode
             size={22}
-            className="absolute left-3 top-4 text-text-secondary"
+            className="absolute left-3 top-4 text-text-secondary z-10"
           />
           <textarea
             ref={textareaRef}
@@ -157,12 +183,13 @@ const AgentBuilder: React.FC = () => {
             rows={1}
             placeholder={AgentBuilderText.placeholder_goal}
             disabled={status === "loading"}
-            className="w-full pl-12 pr-4 py-4 rounded-md border border-border-strong bg-bg-tertiary text-text-primary placeholder:text-text-secondary resize-none overflow-hidden outline-none font-mono disabled:opacity-50 focus:border-accent-cyan/50 transition-colors"
+            style={{ maxHeight: "130px" }}
+            className="w-full pl-12 pr-4 py-4 rounded-md border border-border-strong bg-bg-tertiary text-text-primary placeholder:text-text-secondary resize-none overflow-y-auto outline-none font-mono disabled:opacity-50 focus:border-accent-cyan/50 transition-colors no-scrollbar"
           />
         </div>
 
-        {/* ✅ Single clear deploy button */}
-        <div className="flex justify-center">
+        {/* Deploy button — always at the bottom */}
+        <div className="flex flex-col items-center gap-2">
           <button
             type="submit"
             disabled={isDisabled}
@@ -180,11 +207,10 @@ const AgentBuilder: React.FC = () => {
               </>
             )}
           </button>
+          <p className="text-center text-[10px] font-mono text-text-disabled uppercase tracking-widest">
+            Shift + Enter for new line • Enter to deploy
+          </p>
         </div>
-
-        <p className="mt-4 text-center text-[10px] font-mono text-text-disabled uppercase tracking-widest">
-          Shift + Enter for new line • Enter to deploy
-        </p>
       </form>
     </div>
   );
