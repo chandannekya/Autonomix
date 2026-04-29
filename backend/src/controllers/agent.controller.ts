@@ -130,7 +130,7 @@ export const deleteScheduleAgent = async (req: Request, res: Response) => {
     });
   }
   try {
-    const response = await deleteSchedule(id);
+    const response = await deleteSchedule(id as string);
     return res.status(200).json({
       success: true,
       message: "Agent scheduled deleted successfully",
