@@ -13,7 +13,7 @@ export const runAgentHandler = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Task is required" });
   }
 
-  const result = await runAgent(id, task, history ?? [], () => {}, userId); // ✅ no-op emit
+  const result = await runAgent(id, task, history ?? [], () => { }, userId); // ✅ no-op emit
   return res.json({ data: result });
 };
 
@@ -26,7 +26,7 @@ export const streamAgentHandler = async (req: Request, res: Response) => {
   // Automatically parsed by express.json()
   const id = req.body.id as string;
   const task = req.body.task as string;
-  const history = req.body.history || []; // It's already an array!
+  const history = req.body.history  // It's already an array!
   const userID = req.userId;
 
   if (!id || !task) {
