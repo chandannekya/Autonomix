@@ -27,6 +27,9 @@ export async function generateAgentConfig(userPromt: string) {
     - summarizer
     - send_email
     - google_calendar
+    - weather
+    - stock_price
+    - gmail
     Do not include explanations.
     Do not include markdown.
     Return ONLY valid JSON in this format:

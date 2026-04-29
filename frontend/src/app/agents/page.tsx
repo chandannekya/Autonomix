@@ -11,6 +11,10 @@ type AgentData = {
   role: string;
   memoryEnabled: boolean;
   tools: string[];
+  status?: string;
+  task?: string | null;
+  scheduleCron?: string | null;
+  nextRunAt?: string | null;
 };
 
 const Page = () => {

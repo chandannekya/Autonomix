@@ -353,8 +353,8 @@ WHEN TASK IS COMPLETE:
   const historyText =
     history.length > 0
       ? history
-          .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.content}`)
-          .join("\n")
+        .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.content}`)
+        .join("\n")
       : "No previous messages";
 
   // 6️⃣ Context
@@ -528,7 +528,7 @@ Use the history ONLY if the current directive asks you to do something with it (
               : JSON.stringify(response.answer, null, 2),
         },
       });
-
+      console.log("Final answer:", finalAnswer);
       return finalAnswer;
     }
 

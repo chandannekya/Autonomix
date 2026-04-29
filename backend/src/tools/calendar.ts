@@ -9,7 +9,7 @@ export const googleCalendar = async (
       return "Error: User ID is required to access Google Calendar.";
     }
     const integration = await prisma.userIntegration.findUnique({
-      where: { userId_provider: { userId, provider: "google_calendar" } },
+      where: { userId_provider: { userId, provider: "google" } },
     });
 
     if (!integration || !integration.refreshToken) {

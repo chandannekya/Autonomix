@@ -6,8 +6,11 @@ import agentRoutes from "./routes/agent.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import agentCreationRoutes from "./routes/agentCreation.routes.js";
 import integrationRoutes from "./routes/integration.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
 import { cloudnaryConfig } from "./config/cloudinary.js";
 import { google } from "googleapis";
+import { processDueAgents } from "./services/scheduler.service.js";
+import { googleOAuthCallback } from "./controllers/integration.controller.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -33,6 +36,19 @@ app.use("/api/agents", agentCreationRoutes);
 app.use("/api/agent", agentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/integrations", integrationRoutes);
+app.use("/api/analytics", analyticsRoutes);
+
+// Explicitly handle the exact redirect URI set in Google Cloud Console
+app.get("/auth/google/callback", googleOAuthCallback);
+
+setInterval(() => {
+
+  processDueAgents().catch((err) =>
+    console.error("Scheduler tick error:", err)
+  );
+}, 60_000);
+// Also run once immediately on startup (catches any missed runs)
+processDueAgents().catch(console.error);
 
 cloudnaryConfig();
 

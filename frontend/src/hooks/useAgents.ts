@@ -8,11 +8,14 @@ import {
 import {
   createAgentApi,
   getAgents,
+  getAnalytics,
   getRunHistory,
   runAgent,
   getIntegrations,
   saveApiKey,
   removeIntegration,
+  scheduleAgent,
+  deleteScheduleAgent,
   type AgentResponse,
   type Integration,
   type SaveApiKeyParams,
@@ -46,6 +49,15 @@ export const useAllAgents = () => {
     queryFn: getAgents,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+  });
+};
+
+export const useAnalytics = () => {
+  return useQuery({
+    queryKey: ["analytics"],
+    queryFn: getAnalytics,
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -116,6 +128,32 @@ export const useRemoveIntegration = (
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
       options?.onSuccess?.(data, variables, context, mutation);
     },
+    ...options,
+  });
+};
+
+export const useScheduleAgent = (
+  options?: UseMutationOptions<
+    unknown,
+    Error,
+    { id: string; task: string; scheduleCron: string }
+  >,
+) => {
+  return useMutation<
+    unknown,
+    Error,
+    { id: string; task: string; scheduleCron: string }
+  >({
+    mutationFn: scheduleAgent,
+    ...options,
+  });
+};
+
+export const useDeleteSchedule = (
+  options?: UseMutationOptions<unknown, Error, { id: string }>,
+) => {
+  return useMutation<unknown, Error, { id: string }>({
+    mutationFn: deleteScheduleAgent,
     ...options,
   });
 };

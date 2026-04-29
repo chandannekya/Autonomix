@@ -4,6 +4,9 @@ import { summarizer } from "./summarizer.js";
 import { pdfGenerator } from "./pdfGenerator.js";
 import { sendEmail } from "./emailSender.js";
 import { googleCalendar } from "./calendar.js";
+import { fetchWeather } from "./weather.js";
+import { fetchStock } from "./stock.js";
+import { gmailTool } from "./gmail.js";
 export const tools: Record<
   string,
   (input: string, userId?: string) => Promise<string>
@@ -12,6 +15,9 @@ export const tools: Record<
   web_search: webSearch,
   summarizer,
   google_calendar: googleCalendar,
+  weather: fetchWeather,
+  stock_price: fetchStock,
+  gmail: gmailTool,
   pdf_generator: async (input: string) => {
     const url = await pdfGenerator(input);
     return `PDF generated successfully. [Download PDF](${url})`;

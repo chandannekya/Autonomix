@@ -95,7 +95,10 @@ export const googleOAuthStart = (req: Request, res: Response) => {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
-    scope: ["https://www.googleapis.com/auth/calendar"],
+    scope: [
+      "https://www.googleapis.com/auth/calendar",
+      "https://www.googleapis.com/auth/gmail.modify",
+    ],
     state,
   });
 
@@ -127,12 +130,12 @@ export const googleOAuthCallback = async (req: Request, res: Response) => {
 
     await saveOAuthToken(
       cleanUserId,
-      "google_calendar",
+      "google",
       tokens.refresh_token,
       tokens.access_token ?? undefined,
     );
     return res.redirect(
-      `${process.env.FRONTEND_URL || "http://localhost:3000"}/api/integrations?connected=google_calendar`,
+      `${process.env.FRONTEND_URL || "http://localhost:3000"}/api/integrations?connected=google`,
     );
   } catch (error) {
     const err = error as Error;

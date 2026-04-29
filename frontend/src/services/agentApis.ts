@@ -7,6 +7,8 @@ const endPoints = {
   getAgents: "agents",
   runAgent: "agent/run",
   runHistory: "agent/:id/run",
+  scheduleAgent: "agent/:id/schedule",
+  deleteScheduleAgent: "agent/:id/deleteSchedule",
 
   // Integration Routes (New)
   saveApiKey: "integrations/apikey",
@@ -16,6 +18,9 @@ const endPoints = {
   // Google OAuth Routes
   googleConnect: "integrations/google/connect",
   googleCallback: "integrations/google/callback",
+
+  // Analytics
+  getAnalytics: "analytics",
 };
 export interface AgentResponse {
   data: string;
@@ -56,6 +61,11 @@ export const createAgentApi = async (data: {
 export const getAgents = async () => {
   const agents = await api.get(endPoints.getAgents);
   return agents.data;
+};
+
+export const getAnalytics = async () => {
+  const response = await api.get(endPoints.getAnalytics);
+  return response.data;
 };
 
 export const runAgent = async (data: {
@@ -183,5 +193,25 @@ export const handleGoogleCallback = async (
   queryParams: string,
 ): Promise<unknown> => {
   const response = await api.get(`${endPoints.googleCallback}?${queryParams}`);
+  return response.data;
+};
+
+export const scheduleAgent = async (data: {
+  id: string;
+  task: string;
+  scheduleCron: string;
+}): Promise<unknown> => {
+  const response = await api.put(
+    endPoints.scheduleAgent.replace(":id", data.id),
+    data,
+  );
+  return response.data;
+};
+
+export const deleteScheduleAgent = async (data: { id: string }) => {
+  const response = await api.put(
+    endPoints.deleteScheduleAgent.replace(":id", data.id),
+    data,
+  );
   return response.data;
 };
