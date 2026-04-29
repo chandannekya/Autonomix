@@ -7,6 +7,8 @@ const endPoints = {
   getAgents: "agents",
   runAgent: "agent/run",
   runHistory: "agent/:id/run",
+  scheduleAgent: "agent/:id/schedule",
+  deleteScheduleAgent: "agent/:id/deleteSchedule",
 
   // Integration Routes (New)
   saveApiKey: "integrations/apikey",
@@ -183,5 +185,25 @@ export const handleGoogleCallback = async (
   queryParams: string,
 ): Promise<unknown> => {
   const response = await api.get(`${endPoints.googleCallback}?${queryParams}`);
+  return response.data;
+};
+
+export const scheduleAgent = async (data: {
+  id: string;
+  task: string;
+  scheduleCron: string;
+}): Promise<unknown> => {
+  const response = await api.put(
+    endPoints.scheduleAgent.replace(":id", data.id),
+    data,
+  );
+  return response.data;
+};
+
+export const deleteScheduleAgent = async (data: { id: string }) => {
+  const response = await api.put(
+    endPoints.deleteScheduleAgent.replace(":id", data.id),
+    data,
+  );
   return response.data;
 };

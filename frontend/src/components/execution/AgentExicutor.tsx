@@ -397,57 +397,95 @@ const AgentExecutor: React.FC = () => {
 
               // ── Final response
               if (entry.kind === "response") {
+                // Try to parse as JSON — agent sometimes returns structured data
+                let parsed: Record<string, unknown> | null = null;
+                try {
+                  const candidate = entry.text.trim();
+                  if (candidate.startsWith("{") || candidate.startsWith("[")) {
+                    parsed = JSON.parse(candidate);
+                  }
+                } catch {
+                  parsed = null;
+                }
+
                 return (
                   <div key={i} className="mt-3 ml-8 space-y-1">
                     <span className="text-[10px] text-text-disabled font-mono">
                       [{entry.timestamp}] RESPONSE
                     </span>
-                    <div className="text-accent-cyan text-[13px] leading-relaxed">
-                      <ReactMarkdown
-                        components={{
-                          p: ({ children }) => (
-                            <span className="block mb-1 last:mb-0">
-                              {children}
-                            </span>
-                          ),
-                          ul: ({ children }) => (
-                            <ul className="list-none space-y-1 mt-1">
-                              {children}
-                            </ul>
-                          ),
-                          li: ({ children }) => (
-                            <li className="flex gap-2 items-start">
-                              <span className="text-accent-cyan/50 shrink-0">
-                                ▸
+
+                    {parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (
+                      // ── Structured JSON response
+                      <div className="mt-2 rounded-lg border border-accent-cyan/15 bg-bg-secondary overflow-hidden">
+                        {Object.entries(parsed).map(([key, value]) => {
+                          const label = key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim();
+                          return (
+                            <div key={key} className="border-b border-border-soft/30 last:border-0">
+                              <div className="px-4 py-2 bg-bg-tertiary/40 border-b border-border-soft/20">
+                                <span className="text-[10px] font-mono font-bold text-accent-cyan uppercase tracking-widest">
+                                  {label}
+                                </span>
+                              </div>
+                              <div className="px-4 py-3 text-[12px] text-text-primary leading-relaxed font-sans">
+                                {Array.isArray(value) ? (
+                                  <ul className="space-y-1.5">
+                                    {(value as string[]).map((item, idx) => (
+                                      <li key={idx} className="flex gap-2 items-start">
+                                        <span className="text-accent-cyan/50 shrink-0 mt-0.5">▸</span>
+                                        <span className="text-text-secondary">{String(item)}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-text-secondary whitespace-pre-wrap">{String(value)}</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      // ── Plain text / Markdown response
+                      <div className="text-accent-cyan text-[13px] leading-relaxed">
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => (
+                              <span className="block mb-1 last:mb-0">{children}</span>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="list-none space-y-1 mt-1">{children}</ul>
+                            ),
+                            li: ({ children }) => (
+                              <li className="flex gap-2 items-start">
+                                <span className="text-accent-cyan/50 shrink-0">▸</span>
+                                <span>{children}</span>
+                              </li>
+                            ),
+                            strong: ({ children }) => (
+                              <span className="text-text-primary font-bold">{children}</span>
+                            ),
+                            code: ({ children }) => (
+                              <span className="px-1 py-0.5 rounded bg-bg-tertiary text-accent-cyan text-[11px]">
+                                {children}
                               </span>
-                              <span>{children}</span>
-                            </li>
-                          ),
-                          strong: ({ children }) => (
-                            <span className="text-text-primary font-bold">
-                              {children}
-                            </span>
-                          ),
-                          code: ({ children }) => (
-                            <span className="px-1 py-0.5 rounded bg-bg-tertiary text-accent-cyan text-[11px]">
-                              {children}
-                            </span>
-                          ),
-                          a: ({ href, children }) => (
-                            <a
-                              href={href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-accent-cyan underline underline-offset-2 hover:brightness-125 transition-all"
-                            >
-                              {children}
-                            </a>
-                          ),
-                        }}
-                      >
-                        {entry.text}
-                      </ReactMarkdown>
-                    </div>
+                            ),
+                            a: ({ href, children }) => (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-accent-cyan underline underline-offset-2 hover:brightness-125 transition-all"
+                              >
+                                {children}
+                              </a>
+                            ),
+                          }}
+                        >
+                          {entry.text}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+
                     <div className="border-t border-border-soft/20 mt-2" />
                   </div>
                 );

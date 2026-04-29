@@ -24,6 +24,8 @@
     "chromadb": "^3.0.0",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
+    "cron-parser": "^5.5.0",
+    "cron-validator": "^1.4.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.1",
@@ -32,11 +34,12 @@
     "jsonwebtoken": "^9.0.3",
     "langchain": "^1.2.28",
     "marked": "^17.0.5",
+    "node-cron": "^4.2.1",
     "nodemailer": "^8.0.2",
     "pdfkit": "^0.17.2",
     "pg": "^8.19.0",
     "puppeteer": "^24.40.0",
-    "uuid": "^13.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

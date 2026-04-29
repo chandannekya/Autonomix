@@ -13,6 +13,8 @@ import {
   getIntegrations,
   saveApiKey,
   removeIntegration,
+  scheduleAgent,
+  deleteScheduleAgent,
   type AgentResponse,
   type Integration,
   type SaveApiKeyParams,
@@ -116,6 +118,32 @@ export const useRemoveIntegration = (
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
       options?.onSuccess?.(data, variables, context, mutation);
     },
+    ...options,
+  });
+};
+
+export const useScheduleAgent = (
+  options?: UseMutationOptions<
+    unknown,
+    Error,
+    { id: string; task: string; scheduleCron: string }
+  >,
+) => {
+  return useMutation<
+    unknown,
+    Error,
+    { id: string; task: string; scheduleCron: string }
+  >({
+    mutationFn: scheduleAgent,
+    ...options,
+  });
+};
+
+export const useDeleteSchedule = (
+  options?: UseMutationOptions<unknown, Error, { id: string }>,
+) => {
+  return useMutation<unknown, Error, { id: string }>({
+    mutationFn: deleteScheduleAgent,
     ...options,
   });
 };
