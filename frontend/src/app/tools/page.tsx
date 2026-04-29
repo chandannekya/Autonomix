@@ -63,7 +63,16 @@ export default function ToolsPage() {
         "Read and create Google Calendar events. Great for scheduling assistants.",
       icon: Calendar,
       requiresIntegration: true,
-      provider: "google_calendar",
+      provider: "google",
+      authType: "oauth",
+    },
+    {
+      name: "Gmail",
+      description:
+        "Read, search, and send emails directly from your Google account securely.",
+      icon: Mail,
+      requiresIntegration: true,
+      provider: "google",
       authType: "oauth",
     },
   ];

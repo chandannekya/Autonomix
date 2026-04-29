@@ -18,6 +18,9 @@ const endPoints = {
   // Google OAuth Routes
   googleConnect: "integrations/google/connect",
   googleCallback: "integrations/google/callback",
+
+  // Analytics
+  getAnalytics: "analytics",
 };
 export interface AgentResponse {
   data: string;
@@ -58,6 +61,11 @@ export const createAgentApi = async (data: {
 export const getAgents = async () => {
   const agents = await api.get(endPoints.getAgents);
   return agents.data;
+};
+
+export const getAnalytics = async () => {
+  const response = await api.get(endPoints.getAnalytics);
+  return response.data;
 };
 
 export const runAgent = async (data: {
