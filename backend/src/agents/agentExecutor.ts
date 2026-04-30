@@ -10,7 +10,7 @@ export type ToolName = keyof typeof tools;
 // ─── Model ───────────────────────────────────────────────────────────────────
 
 const primaryModel = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash",
+  model: "gemini-2.5-flash-lite",
   apiKey: process.env.GOOGLE_API_KEY!,
   maxRetries: 1,
 });
@@ -252,12 +252,12 @@ function extractJSON(raw: string): string {
   }
 
   let jsonString = end !== -1 ? cleaned.slice(start, end + 1) : cleaned;
-  
+
   // Sanitize literal newlines inside strings
   let sanitized = "";
   let insideString = false;
   let isEscape = false;
-  
+
   for (let i = 0; i < jsonString.length; i++) {
     const char = jsonString[i];
     if (isEscape) {
@@ -275,7 +275,7 @@ function extractJSON(raw: string): string {
       sanitized += char;
       continue;
     }
-    
+
     if (insideString) {
       if (char === "\n") {
         sanitized += "\\n";
@@ -290,7 +290,7 @@ function extractJSON(raw: string): string {
       sanitized += char;
     }
   }
-  
+
   return sanitized;
 }
 

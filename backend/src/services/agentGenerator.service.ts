@@ -10,7 +10,7 @@ type Agent = {
 };
 
 const primaryModel = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash",
+  model: "gemini-2.5-flash-lite",
   apiKey: process.env.GOOGLE_API_KEY,
   maxRetries: 1,
 });

@@ -13,8 +13,8 @@ export const sendEmail = async ({
   console.log("EMAIL", process.env.MAIL_USER);
   const transporter = createTransport({
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for 465, false for other ports
+    // port: 465,
+    // secure: true,
     auth: {
       user: process.env.MAIL_USER,
       pass: process.env.MAIL_PASS,
