@@ -9,9 +9,20 @@ export type ToolName = keyof typeof tools;
 
 // ─── Model ───────────────────────────────────────────────────────────────────
 
-const model = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash-lite",
+const primaryModel = new ChatGoogleGenerativeAI({
+  model: "gemini-2.5-flash",
   apiKey: process.env.GOOGLE_API_KEY!,
+  maxRetries: 1,
+});
+
+const fallbackModel = new ChatGoogleGenerativeAI({
+  model: "gemini-2.0-flash",
+  apiKey: process.env.GOOGLE_API_KEY!,
+  maxRetries: 2,
+});
+
+const model = primaryModel.withFallbacks({
+  fallbacks: [fallbackModel],
 });
 
 // ─── Role Behavior Injection ──────────────────────────────────────────────────
@@ -240,7 +251,47 @@ function extractJSON(raw: string): string {
     }
   }
 
-  return end !== -1 ? cleaned.slice(start, end + 1) : cleaned;
+  let jsonString = end !== -1 ? cleaned.slice(start, end + 1) : cleaned;
+  
+  // Sanitize literal newlines inside strings
+  let sanitized = "";
+  let insideString = false;
+  let isEscape = false;
+  
+  for (let i = 0; i < jsonString.length; i++) {
+    const char = jsonString[i];
+    if (isEscape) {
+      sanitized += char;
+      isEscape = false;
+      continue;
+    }
+    if (char === "\\") {
+      sanitized += char;
+      isEscape = true;
+      continue;
+    }
+    if (char === '"') {
+      insideString = !insideString;
+      sanitized += char;
+      continue;
+    }
+    
+    if (insideString) {
+      if (char === "\n") {
+        sanitized += "\\n";
+      } else if (char === "\r") {
+        sanitized += "\\r";
+      } else if (char === "\t") {
+        sanitized += "\\t";
+      } else {
+        sanitized += char;
+      }
+    } else {
+      sanitized += char;
+    }
+  }
+  
+  return sanitized;
 }
 
 // ─── Main Agent Runner ────────────────────────────────────────────────────────
@@ -320,6 +371,7 @@ CRITICAL RULES:
 17. NEVER call web_search more than once for the same task.
 18. After getting search results, you MUST use them to proceed to next step (pdf/email).
 19. If sufficient data is available, STOP calling tools and return final.
+20. ESCAPE NEWLINES: You MUST escape all newlines inside your JSON strings using '\\n'. Never use raw literal line breaks in the JSON string.
 TO USE A TOOL:
 {
   "action": "tool",
@@ -532,6 +584,7 @@ Use the history ONLY if the current directive asks you to do something with it (
       return finalAnswer;
     }
 
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     iteration++;
   }
 

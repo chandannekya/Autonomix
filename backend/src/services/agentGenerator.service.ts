@@ -9,9 +9,20 @@ type Agent = {
   memoryEnabled: boolean;
 };
 
-const model = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash-lite",
+const primaryModel = new ChatGoogleGenerativeAI({
+  model: "gemini-2.5-flash",
   apiKey: process.env.GOOGLE_API_KEY,
+  maxRetries: 1,
+});
+
+const fallbackModel = new ChatGoogleGenerativeAI({
+  model: "gemini-2.0-flash",
+  apiKey: process.env.GOOGLE_API_KEY,
+  maxRetries: 2,
+});
+
+const model = primaryModel.withFallbacks({
+  fallbacks: [fallbackModel],
 });
 
 export async function generateAgentConfig(userPromt: string) {
