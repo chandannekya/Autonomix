@@ -1,136 +1,189 @@
 <div align="center">
-  <img src="./frontend/public/favicon.png" width="100" height="100" alt="AutonomiX Logo"/>
-  <h1>🤖 AutonomiX</h1>
-  <p><strong>A Next-Generation Autonomous AI Agent Platform</strong></p>
+  <img src="./frontend/public/favicon.png" width="120" height="120" alt="AutonomiX Logo"/>
+  <h1>AutonomiX</h1>
+  <p><strong>A Next-Generation Full-Stack Autonomous AI Agent Platform</strong></p>
   
-  ![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
-  ![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=nodedotjs)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-  ![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
-  ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css)
-  ![Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash-4285F4?style=for-the-badge&logo=google)
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/Express-API-blue?style=for-the-badge&logo=express" alt="Express" />
+    <img src="https://img.shields.io/badge/PostgreSQL-DB-blue?style=for-the-badge&logo=postgresql" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Gemini-AI-orange?style=for-the-badge&logo=google" alt="Gemini" />
+  </p>
 </div>
 
 ---
 
-AutonomiX is a powerful, full-stack platform designed for building, managing, and executing autonomous AI agents. Powered by Google's Gemini Flash models, these agents can reason, execute complex workflows, search the web, manipulate memory, generate PDFs, schedule calendar events, and manage integrations seamlessly.
+## 🚀 Overview
 
-## ✨ Core Features
+**AutonomiX** is a powerful platform designed to build, manage, schedule, and run autonomous AI agents. Powered by Google Generative AI (Gemini 2.5/2.0 Flash) and LangChain, it provides a comprehensive "Mission Control" interface to orchestrate complex, multi-step agent workflows seamlessly.
 
-*   **🧠 Advanced Agent Reasoning:** Powered by **Google Gemini 2.5 Flash** & LangChain, the agents run iterative execution loops, utilizing tools dynamically based on user prompts.
-*   **🛠️ Extensive Tool Ecosystem:** 
-    *   🌍 **Tavily Web Search:** Real-time fact-finding and data gathering.
-    *   📅 **Google Calendar:** Seamless event scheduling and listing.
-    *   📧 **Gmail / SMTP:** Send formatted emails autonomously.
-    *   📄 **PDF Generation:** Create and upload PDF reports on the fly (via Cloudinary & PDFKit).
-    *   🧮 **Calculator & Summarizer:** Data manipulation and text processing.
-*   **💾 Vector Memory:** Integrated with **ChromaDB** for long-term agent memory and RAG capabilities.
-*   **⏱️ Task Scheduling:** Automate agent workflows with cron-based scheduling to run tasks continuously in the background.
-*   **🔐 Secure Authentication:** Seamless Google OAuth & credential-based login powered by Next-Auth v5.
-*   **🎨 Premium UI/UX:** A stunning, responsive "Terminal/Mission Control" dark aesthetic built with TailwindCSS v4 and React 19.
+Whether you need an agent to scrape the web, manage your calendar, fetch stock prices, or summarize documents, AutonomiX provides a robust, scalable environment with persistent vector memory and flexible scheduling capabilities.
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## ✨ Key Features
 
-### 💻 Frontend (`/frontend`)
-*   **Framework:** Next.js 16 (App Router)
-*   **UI & Styling:** React 19, Tailwind CSS v4, Lucide React
-*   **State Management:** Zustand, React Query
-*   **Auth:** Next-Auth v5 Beta
-
-### ⚙️ Backend (`/backend`)
-*   **Framework:** Node.js, Express.js
-*   **Database:** PostgreSQL (managed via Prisma ORM)
-*   **AI Engine:** `@langchain/google-genai`, `@google/generative-ai`
-*   **Vector DB:** ChromaDB
-*   **Assets:** Cloudinary
+- 🧠 **Advanced AI Agents**: Powered by Google Generative AI (Gemini) and LangChain for highly intelligent, autonomous decision-making.
+- 🛠️ **Extensive Tool Integration**: Out-of-the-box support for Web Search, Email (Gmail/SMTP), Google Calendar, Document Summarization, PDF Generation, Stock Prices, and Weather.
+- 💾 **Vector Memory**: Intelligent agent recall powered by ChromaDB, allowing agents to remember past interactions and context.
+- ⏰ **Background Scheduling**: Create cron-based schedules for recurring agent execution without manual intervention.
+- 🎨 **Premium UI/UX**: A state-of-the-art Bento-style "Mission Control" dashboard built with Next.js 16, Tailwind CSS v4, and Zustand.
+- 🔒 **Secure Authentication**: Seamless Google OAuth integration via Next-Auth v5.
+- 🐳 **Docker Ready**: Fully containerized setup via `docker-compose` for rapid deployment.
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ Technology Stack
+
+| Category | Technologies |
+| :--- | :--- |
+| **Frontend** | Next.js 16 (App Router), React 19, Tailwind CSS v4, Zustand, React Query, Next-Auth |
+| **Backend** | Node.js, Express, Prisma ORM |
+| **Database** | PostgreSQL (Relational), ChromaDB (Vector Search) |
+| **AI / ML** | Google Generative AI (Gemini), LangChain |
+| **Integrations** | Cloudinary (Media), NodeMailer (SMTP), Puppeteer (Web), PDFKit |
+| **Infrastructure** | Docker, Docker Compose |
+
+---
+
+## 📂 Project Structure
+
+```text
+AutonomiX/
+├── backend/                  # Express API, Agent Orchestration, Tools
+│   ├── src/agents/           # LangChain Agent definitions & LLM setup
+│   ├── src/tools/            # Integrations: Web Search, Gmail, Calendar, etc.
+│   ├── src/memory/           # ChromaDB Vector Store operations
+│   └── prisma/               # Database schemas and migrations
+├── frontend/                 # Next.js Application
+│   ├── src/app/              # App Router pages (Dashboard, Settings, etc.)
+│   ├── src/components/       # Reusable UI components (Bento UI, Modals)
+│   └── src/store/            # Zustand global state management
+└── docker-compose.yml        # Full stack container configuration
+```
+
+---
+
+## ⚙️ Getting Started
 
 ### Prerequisites
-*   [Node.js](https://nodejs.org/) (v18 or higher)
-*   [PostgreSQL](https://www.postgresql.org/) database
-*   API Keys: Google Gemini, Google OAuth, Cloudinary, Tavily, Chroma DB.
+- Node.js >= 20.x
+- Docker & Docker Compose (for ChromaDB/PostgreSQL/Quickstart)
+- API Keys: Google Gemini, Cloudinary (optional), Gmail App Password (optional)
 
-### 1. Backend Setup
+### 🐳 Quick Start (Docker)
 
-1.  Navigate to the backend directory:
-    ```bash
-    cd backend
-    ```
-2.  Install dependencies (this will automatically generate the Prisma client):
-    ```bash
-    npm install
-    ```
-3.  Create a `.env` file in the `backend` directory:
-    ```env
-    # Database
-    DATABASE_URL="postgresql://username:password@localhost:5432/Autonomix?schema=public"
+The fastest way to get AutonomiX running locally:
 
-    # AI Integration
-    GOOGLE_API_KEY="your_google_gemini_api_key"
-    TAVILY_API_KEY="your_tavily_api_key"
+```bash
+# 1. Clone the repository
+git clone https://github.com/chandannekya/Autonomix.git
+cd Autonomix
 
-    # Vector Memory
-    CHROMA_API_KEY="your_chroma_api_key"
-    CHROMA_TENANT="your_chroma_tenant_id"
-    CHROMA_DB_NAME="Autonomix"
+# 2. Configure environment variables (See section below)
+# Copy example env files if provided, or create them.
 
-    # Asset Management
-    CLOUDINARY_CLOUD_NAME="your_cloudinary_cloud_name"
-    CLOUDINARY_API_KEY="your_cloudinary_api_key"
-    CLOUDINARY_API_SECRET="your_cloudinary_api_secret"
+# 3. Build and spin up the entire stack
+docker compose up --build
+```
+- **Frontend**: `http://localhost:3000`
+- **Backend API**: `http://localhost:4000`
+- **PostgreSQL**: `localhost:5432`
+- **ChromaDB**: `localhost:8000`
 
-    # Email Service
-    MAIL_HOST="smtp.gmail.com"
-    MAIL_USER="your_email@gmail.com"
-    MAIL_PASS="your_app_password"
+### 💻 Manual Setup
 
-    # Google OAuth
-    GOOGLE_CLIENT_ID="your_google_client_id"
-    GOOGLE_CLIENT_SECRET="your_google_client_secret"
-    GOOGLE_REDIRECT_URI="http://localhost:4000/auth/google/callback"
-    GOOGLE_REFRESH_TOKEN="your_google_refresh_token"
-    ```
-4.  Push the Prisma schema to your database:
-    ```bash
-    npx prisma db push
-    ```
-5.  Start the backend development server (Port 4000):
-    ```bash
-    npm run dev
-    ```
+If you prefer to run services manually:
 
-### 2. Frontend Setup
+<details>
+<summary><b>1. Backend Setup</b></summary>
 
-1.  Open a new terminal and navigate to the frontend directory:
-    ```bash
-    cd frontend
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Create a `.env` file in the `frontend` directory:
-    ```env
-    NEXT_PUBLIC_BASE_URL="http://localhost:4000/api"
-    NEXTAUTH_URL="http://localhost:3000"
-    NEXTAUTH_SECRET="your_secure_random_nextauth_secret"
-    
-    GOOGLE_CLIENT_ID="your_google_client_id"
-    GOOGLE_CLIENT_SECRET="your_google_client_secret"
-    ```
-4.  Start the Next.js frontend server:
-    ```bash
-    npm run dev
-    ```
-5.  Visit [http://localhost:3000](http://localhost:3000) to access the AutonomiX Command Center.
+```bash
+cd backend
+npm install
+
+# Push database schema (requires running Postgres instance)
+npx prisma db push
+
+# Start the development server
+npm run dev
+```
+</details>
+
+<details>
+<summary><b>2. Frontend Setup</b></summary>
+
+```bash
+cd frontend
+npm install
+
+# Start the Next.js frontend
+npm run dev
+```
+</details>
 
 ---
 
-## 📄 License
+## 🔐 Environment Variables
 
-This project is licensed under the ISC License (Backend). Frontend assets are private.
+You need to configure `.env` files in both `frontend` and `backend` directories. 
+
+### `backend/.env`
+```env
+# Server
+PORT=4000
+FRONTEND_URL="http://localhost:3000"
+JWT_SECRET="your_secure_jwt_secret"
+
+# Database & ChromaDB
+DATABASE_URL="postgresql://postgres:password@localhost:5432/autonomix?schema=public"
+CHROMA_URL="http://localhost:8000"
+
+# AI Integrations
+GOOGLE_API_KEY="your_google_gemini_api_key"
+TAVILY_API_KEY="your_tavily_api_key_for_web_search"
+
+# External Tools (Optional depending on usage)
+CLOUDINARY_CLOUD_NAME="..."
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
+MAIL_HOST="smtp.gmail.com"
+MAIL_USER="your_email@gmail.com"
+MAIL_PASS="your_app_password"
+
+# OAuth Backend Handlers
+GOOGLE_CLIENT_ID="your_google_client_id"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+GOOGLE_REDIRECT_URI="http://localhost:4000/auth/google/callback"
+```
+
+### `frontend/.env`
+```env
+# Frontend Config
+NEXT_PUBLIC_BASE_URL="http://localhost:4000/api"
+
+# Next-Auth Settings
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your_nextauth_secret"
+GOOGLE_CLIENT_ID="your_google_client_id"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+```
+
+---
+
+## 🤖 Available Tools
+
+Agents in AutonomiX are equipped with powerful tools they can invoke autonomously:
+
+- **Web Search**: Live internet search capability using Puppeteer / Tavily.
+- **Email & Gmail**: Send outgoing emails and read inboxes using secure SMTP integration.
+- **Google Calendar**: Retrieve and schedule events.
+- **Document Summarization**: Intelligent summarization of lengthy texts.
+- **PDF Generation**: Dynamically compile agent research into formatted PDFs.
+- **Financial & Weather**: Live retrieval of stock prices and weather updates.
+
+---
+
+<div align="center">
+  <i>Built with ❤️ for the future of autonomous intelligence.</i>
+</div>

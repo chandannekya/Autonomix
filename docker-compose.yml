@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - ./frontend/.env
+
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:4000
+
+    depends_on:
+      - backend
+
+
+  backend:
+    build:
+      context: ./backend
+
+    ports:
+      - "4000:4000"
+
+    env_file:
+      - ./backend/.env
+
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/autonomix
+      CHROMA_URL: http://chromadb:8000
+
+    depends_on:
+      - postgres
+      - chromadb
+
+
+  postgres:
+    image: postgres:17-alpine
+
+    restart: always
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: autonomix
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+  chromadb:
+    image: chromadb/chroma
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - chroma_data:/chroma/chroma
+
+
+volumes:
+  postgres_data:
+  chroma_data:
